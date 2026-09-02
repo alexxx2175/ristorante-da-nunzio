@@ -1,0 +1,22 @@
+# dipendenze e prodotti della compilazione
+node_modules
+.next
+out
+build
+*.tsbuildinfo
+next-env.d.ts
+
+# sistema
+.DS_Store
+
+# segreti: la password del pannello e i token stanno qui, e qui restano.
+# `.env.example` invece si versiona: documenta quali variabili servono.
+.env*.local
+.env.local
+
+# dati del pannello /admin (deposito locale di sviluppo)
+.dati/
+
+# permessi concessi a Claude Code su questa macchina: sono di chi ci lavora,
+# non del progetto. Le skill in .claude/skills/ invece si versionano.
+.claude/settings.local.json

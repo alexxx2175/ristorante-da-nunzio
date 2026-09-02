@@ -1,0 +1,703 @@
+@import 'tailwindcss';
+
+/* ==========================================================================
+   DESIGN TOKENS — Ristorante da Nunzio
+   Palette calda ed elegante: crema, nero caldo e oro. I fondi principali sono
+   texture immagine (marmo chiaro, marmo scuro con venature dorate) piu' che
+   colori flat: vedi le classi .texture-* piu' sotto.
+   ========================================================================== */
+
+@theme {
+  /* --- Colori ------------------------------------------------------------ */
+  --color-primary: #fefefe; /* quasi bianco: testo su fondi scuri / hero      */
+  --color-secondary: #17130f; /* nero caldo: testo su fondi chiari            */
+  --color-bg-light: #faf6f0; /* crema: base sotto la texture marmo chiaro     */
+  --color-bg-dark: #0d0b09; /* base scura sotto la texture marmo scuro        */
+  --color-accent-gold: #b78c57; /* oro: CTA, dettagli, venature del footer    */
+  --color-text-muted: #8a8177; /* testo "non ancora rivelato" nello scroll-fill */
+
+  /* --- Tipografia -------------------------------------------------------- */
+  /* Le variabili --font-bodoni / --font-montserrat sono iniettate da
+     next/font/google in app/layout.tsx.                                      */
+  --font-serif: var(--font-bodoni), 'Bodoni Moda', Didot, Georgia, serif;
+  --font-sans: var(--font-montserrat), 'Montserrat', system-ui, sans-serif;
+
+  /* Scala display (fluida, clamp min/desktop) */
+  --text-display-hero: clamp(2.25rem, 5.2vw, 4rem); /* H1 hero ~64px @desktop */
+  --text-display-hero--line-height: 1.52; /* ~97.6px, come da CSS originale   */
+  --text-display-claim: clamp(1.75rem, 3.4vw, 3.25rem); /* claim mission ~52px  */
+  --text-display-claim--line-height: 1.3;
+  --text-display-word: clamp(3.5rem, 9vw, 6rem); /* "eat" / "sip" ~96px       */
+  --text-display-word--line-height: 1;
+  --text-display-cta: clamp(2rem, 4vw, 3rem); /* footer "order now" ~48px     */
+  --text-display-cta--line-height: 1.1;
+
+  /* --- Breakpoint --------------------------------------------------------
+     Il sito originale (Elementor Pro con breakpoint estesi) dichiara decine di
+     media query. Qui teniamo i principali; gli extra sono micro-aggiustamenti.
+     Default Tailwind mantenuti: sm 640 / md 768 / lg 1024 / xl 1280 / 2xl 1536 */
+  --breakpoint-xs: 30rem; /* 480px  — fine-tuning mobile (430/479/500)        */
+  --breakpoint-hd: 90rem; /* 1440px — desktop grande                          */
+  --breakpoint-fhd: 120rem; /* 1920px — full HD e oltre                       */
+
+  /* --- Spaziature / layout ---------------------------------------------- */
+  --spacing-gutter: 4%; /* padding laterale percentuale dei container         */
+  --spacing-section: 4.5rem; /* 72px di ritmo verticale desktop              */
+  --spacing-section-sm: 2.5rem; /* 40px su tablet/mobile                      */
+  --spacing-header: 8.5rem; /* 136px: altezza header desktop                  */
+
+  /* --- Easing ------------------------------------------------------------ */
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Quanto dura la sola inquadratura del video sulla home, prima che compaia
+     il sito. Vedi il blocco "Apertura della home" piu' sotto. */
+  --intro-attesa: 1.5s;
+}
+
+/* ==========================================================================
+   RESET / BASE
+   ========================================================================== */
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    /* Lo smooth scroll e' gestito da Lenis: niente scroll-behavior nativo. */
+    scroll-behavior: auto;
+  }
+
+  body {
+    margin: 0;
+    /* Qui resta solo il colore di fondo. Il marmo e' un livello a se',
+       `.marble-backdrop`, montato una volta nel layout. */
+    background-color: var(--color-bg-light);
+    color: var(--color-secondary);
+    font-family: var(--font-sans);
+    font-size: 0.875rem; /* 14px, come da CSS originale */
+    font-weight: 400;
+    line-height: 1.22;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: clip;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-weight: 400; /* nell'originale i titoli sono tutti weight 400 */
+    letter-spacing: 0;
+  }
+
+  p {
+    margin: 0;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  img,
+  video {
+    display: block;
+    max-width: 100%;
+  }
+
+  button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  ::selection {
+    background: var(--color-secondary);
+    color: var(--color-primary);
+  }
+}
+
+/* ==========================================================================
+   UTILITY DI PROGETTO
+   ========================================================================== */
+
+@utility container-gutter {
+  width: 100%;
+  padding-inline: 1.25rem;
+
+  @media (width >= 48rem) {
+    padding-inline: var(--spacing-gutter);
+  }
+}
+
+@utility section-y {
+  padding-block: var(--spacing-section-sm);
+
+  @media (width >= 64rem) {
+    padding-block: var(--spacing-section);
+  }
+}
+
+/* Ritmo verticale delle sezioni.
+
+   Il contenuto e' centrato in verticale, ma **l'altezza la detta il contenuto**:
+   niente `min-height: 100svh`.
+
+   C'e' stato. Ogni sezione era alta una schermata intera e le quattro sezioni
+   centrali della home portavano ~1130px di vuoto in tutto — il contenuto ne
+   occupava 590-660 su 900. Tenere l'aria intorno al testo e' una cosa, tenere
+   una schermata vuota per convenzione e' un'altra.
+
+   Il padding in cima per l'header fisso non sta piu' qui: l'header e' `fixed` e
+   il contenuto gli scorre sotto, quindi riservargli spazio serve solo alla
+   sezione che apre la pagina. Quella e' `page-hero-section`. */
+@utility screen-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-block: var(--spacing-section-sm);
+
+  @media (width >= 64rem) {
+    padding-block: var(--spacing-section);
+  }
+}
+
+/* Testata delle pagine interne: l'unica sezione che sta davvero sotto l'header
+   alla prima schermata, quindi l'unica che deve riservargli spazio. Il minimo
+   di altezza serve a garantire un fondo scuro sotto l'header, che nello stato
+   iniziale ha il testo bianco. */
+@utility page-hero-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 58svh;
+  padding-block: 7rem var(--spacing-section-sm);
+
+  @media (width >= 80rem) {
+    padding-block: var(--spacing-header) var(--spacing-section);
+  }
+}
+
+/* Testo nav: 14px / 500 / uppercase / letter-spacing 2px */
+@utility nav-link {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.125rem;
+}
+
+/* Sfondi texture.
+
+   Il marmo chiaro c'e' (`texture-marmo-chiaro.jpg`, ruotato in verticale in modo
+   che le venature scendano lungo la pagina). Il marmo scuro no: quella classe
+   resta colore pieno finche' il file non arriva — se ci mettessimo un `url()`
+   verso un file inesistente sarebbe un 404 a ogni caricamento senza cambiare
+   niente a schermo, che e' esattamente com'era prima.
+
+     .texture-marble-dark  ->  background-image: url('/images/texture-marmo-scuro-oro.jpg');  [TEXTURE-MARMO-SCURO-ORO]
+
+   Il `background-color` sotto non e' ridondante: e' quello che si vede mentre
+   l'immagine carica, e se non arrivasse resterebbe quello. */
+.texture-marble-light {
+  /* Trasparente di proposito: il marmo lo mette il body. La classe resta come
+     marcatore di "sezione chiara" — se un domani servisse un fondo diverso da
+     quello del sito, si cambia qui e in un punto solo. */
+  background-color: transparent;
+}
+
+.texture-marble-dark {
+  background-color: var(--color-bg-dark);
+  background-size: cover;
+  background-position: center;
+}
+
+/* Il marmo di sfondo del sito: un livello fisso dietro a tutto, montato una
+   volta sola in app/layout.tsx.
+
+   Era `background-attachment: fixed` sul body. Funzionava, ma e' il modo piu'
+   caro di tenere fermo uno sfondo: il browser non puo' limitarsi a far
+   scorrere il livello, deve ridisegnare la texture a ogni fotogramma di
+   scroll. Su un Mac non si nota, su un telefono e' esattamente il genere di
+   costo che si legge come scatto. Un elemento `position: fixed` invece resta
+   un livello per conto suo e viene solo composto.
+
+   In piu' iOS Safari ignora `background-attachment: fixed`; un elemento fisso
+   no, quindi li' l'effetto ora c'e' davvero. */
+.marble-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--color-bg-light);
+  background-image: url('/images/texture-marmo-chiaro.jpg'); /* [TEXTURE-MARMO-CHIARO] */
+  background-size: cover;
+  background-position: center;
+}
+
+/* Header fisso: transizione fra stato trasparente (sopra la hero) e stato
+   compatto con fondo crema, agganciata alla classe .is-scrolled. */
+.site-header {
+  transition:
+    background-color 0.4s var(--ease-soft),
+    color 0.4s var(--ease-soft),
+    height 0.4s var(--ease-soft),
+    box-shadow 0.4s var(--ease-soft);
+}
+
+/* Forme organiche della gallery: cerchio, pillola, arco.
+   Il rettangolo non ha piu' una classe propria: e' un rettangolo pieno, gli
+   basta il suo aspect-ratio in Gallery. */
+.shape-circle {
+  border-radius: 9999px;
+  aspect-ratio: 1 / 1;
+}
+
+.shape-pill {
+  border-radius: 9999px;
+  aspect-ratio: 3 / 5;
+}
+
+/* L'arco resta arcuato in cima — quella e' la forma — ma appoggia su una base
+   squadrata: gli angoli in basso erano stondati e non lo sono piu'. */
+.shape-arch {
+  border-radius: 9999px 9999px 0 0;
+  aspect-ratio: 3 / 4;
+}
+
+/* Stato iniziale degli elementi animati da GSAP: evita il "flash" pre-JS.
+   La classe viene rimossa/animata da lib/animations.ts. */
+.gsap-hidden {
+  opacity: 0;
+}
+
+/* Text reveal (mission statement): le parole partono muted e vengono
+   "riempite" dallo scrub di ScrollTrigger. */
+.text-reveal .word {
+  color: var(--color-text-muted);
+  transition: none;
+}
+
+
+/* ==========================================================================
+   ANIMAZIONI
+   ========================================================================== */
+
+/* --- Apertura della home ------------------------------------------------
+   I primi due secondi si vede **solo il video**, a tutto schermo e senza
+   nient'altro sopra. Poi compare il sito: prima l'header, poi il contenuto
+   della hero.
+
+   C'era un'apertura a cerchio (`clip-path` da `circle(12%)` a `circle(85%)`)
+   che faceva entrare lo sfondo da un puntino. E' stata tolta: era nata quando
+   lo sfondo era una fotografia, e su un video toglieva i primi due secondi di
+   ripresa proprio mentre si apriva.
+
+   Se ci si torna, la trappola da ricordare: i due estremi devono avere la
+   **stessa forma** di `circle()`. Se uno porta la posizione esplicita e l'altro
+   no, il minificatore normalizza solo quello in cui e' ridondante, il browser
+   non riesce piu' a interpolare e l'animazione salta secca al valore finale.
+
+   Tutto in CSS e non a colpi di `setTimeout`: se lo script non parte, il sito
+   e' comunque visibile (`both` su elementi che finiscono opachi), e con
+   `prefers-reduced-motion` la regola in fondo azzera le durate, quindi compare
+   subito senza attesa. */
+
+/* Il contenuto della hero: entra dopo l'header, cosi' il sito si compone
+   dall'alto invece di apparire tutto insieme. */
+@keyframes hero-content-in {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-content {
+  animation: hero-content-in 1s var(--ease-soft) calc(var(--intro-attesa) + 0.35s) both;
+}
+
+/* L'header entra per primo, allo scadere dell'attesa. Solo sulla home: sulle
+   altre pagine non c'e' nessuna inquadratura da lasciar respirare, e un header
+   che tarda sarebbe solo un header lento. */
+.intro-header {
+  animation: hero-content-in 0.8s var(--ease-soft) var(--intro-attesa) both;
+}
+
+/* Anche la freccia in fondo alla hero fa parte del "sito che si apre". */
+.intro-freccia {
+  animation: hero-content-in 0.8s var(--ease-soft) calc(var(--intro-attesa) + 0.6s) both;
+}
+
+/* Stessa entrata per la testata delle pagine interne, ma quasi subito: li' non
+   c'e' nessun cerchio da aspettare.
+
+   E' in CSS e non agganciata allo scroll di proposito: la testata e' gia' in
+   viewport al caricamento, quindi uno ScrollTrigger scatterebbe comunque
+   all'istante — pero' solo dopo l'idratazione, e l'H1 e' l'elemento LCP della
+   pagina. Cosi' invece parte al primo paint e non dipende da JS. */
+.page-hero-content {
+  animation: hero-content-in 0.9s var(--ease-soft) 0.15s both;
+}
+
+/* --- Titolo riempito da un gradiente -------------------------------------
+   Il testo e' trasparente e lascia vedere un gradiente che scorre da destra a
+   sinistra. Senza la classe `is-filled` il gradiente e' gia' in posizione
+   leggibile: se JS non aggiunge mai la classe, il titolo resta pieno. */
+@keyframes gradient-sweep {
+  from {
+    background-position: 150% center;
+  }
+  to {
+    background-position: 0 center;
+  }
+}
+
+@utility animated-text {
+  display: inline-block;
+  background: linear-gradient(
+      to right,
+      var(--color-secondary) 0%,
+      var(--color-secondary) 55%,
+      color-mix(in srgb, var(--color-secondary) 25%, transparent) 100%
+    )
+    0 center / 300% no-repeat text;
+  -webkit-text-fill-color: transparent;
+}
+
+.animated-text.is-filled {
+  animation: gradient-sweep 2.4s linear both;
+}
+
+/* Variante su fondo scuro. */
+.animated-text.on-dark {
+  background-image: linear-gradient(
+    to right,
+    var(--color-primary) 0%,
+    var(--color-primary) 55%,
+    color-mix(in srgb, var(--color-primary) 25%, transparent) 100%
+  );
+}
+
+/* --- Immagine che si scopre con una maschera -----------------------------
+   Stato iniziale: maschera larga 0, quindi invisibile. Lo apre `maskReveal()`
+   in lib/animations.ts, che con reduced-motion salta dritto allo stato finale. */
+.mask-reveal {
+  mask-image: linear-gradient(to right, black 0%, transparent 100%);
+  mask-repeat: no-repeat;
+  mask-size: 0% 100%;
+  -webkit-mask-image: linear-gradient(to right, black 0%, transparent 100%);
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: 0% 100%;
+}
+
+/* Senza JS resterebbero invisibili per sempre gli elementi che ad accendere e'
+   GSAP: la foto mascherata dello chef (`maskReveal`) e tutto cio' che parte da
+   `.gsap-hidden` (tessere della gallery, blocchi in `Reveal`, voci del menù).
+   Qui si riaprono.
+
+   `scripting: none` e' vero quando lo scripting e' disattivato del tutto. Prima
+   qui c'era `.no-js`, che pero' nessuno aggiungeva mai all'<html>: la regola non
+   si applicava in nessun caso. Questa invece non ha bisogno di niente lato JS.
+   Sui browser che non conoscono la media query la regola viene ignorata, cioe'
+   si torna al comportamento di prima: non si peggiora nulla.
+
+   Vale la pena ricordarsi che `.gsap-hidden` nasconde **contenuto**, non
+   decorazione: le voci del menù coi prezzi passano di qui. */
+@media (scripting: none) {
+  .mask-reveal {
+    mask-size: 1000% 100%;
+    -webkit-mask-size: 1000% 100%;
+  }
+
+  .gsap-hidden {
+    opacity: 1;
+  }
+}
+
+/* --- Archi concentrici della sezione forchetta ---------------------------
+   Ogni arco si disegna da un capo. `pathLength: 1` normalizza la lunghezza di
+   ogni tracciato a 1, cosi' `stroke-dasharray: 1` copre esattamente l'arco
+   qualunque sia la sua misura reale — senza doverla calcolare a mano ne'
+   aggiornarla se i tracciati cambiano.
+
+   Lo stato di partenza (`dashoffset: 1`, cioe' invisibile) sta nell'animazione
+   con `both`, non in una regola a se': se lo mettessimo fuori, con
+   `prefers-reduced-motion` la regola globale azzera la durata ma non lo stato
+   iniziale, e gli archi resterebbero invisibili per sempre. */
+@keyframes arco-disegna {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.arco-linea {
+  stroke-dasharray: 1;
+  animation: arco-disegna 2.4s var(--ease-soft) both;
+}
+
+/* Il piatto respira: uno spostamento piccolo e lento, che si nota solo se ci si
+   ferma a guardare.
+
+   Classe piana, senza variante `motion-safe:`: quella funziona sulle utility di
+   Tailwind, non su una classe scritta a mano — `motion-safe:fluttua` non genera
+   niente e l'animazione non parte. Con prefers-reduced-motion ci pensa comunque
+   la regola globale in fondo al file, che azzera tutte le durate. */
+@keyframes fluttua {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1.1rem);
+  }
+}
+
+.fluttua {
+  animation: fluttua 6s ease-in-out infinite;
+}
+
+/* --- Micro-interazioni ---------------------------------------------------- */
+
+/* Le frecce del carosello crescono un poco al passaggio del mouse. */
+.arrow-btn {
+  transition:
+    transform 0.3s var(--ease-soft),
+    background-color 0.3s var(--ease-soft),
+    color 0.3s var(--ease-soft),
+    border-color 0.3s var(--ease-soft);
+}
+
+.arrow-btn:hover {
+  transform: scale(1.1);
+}
+
+/* Sottolineatura che cresce da sinistra sotto le voci di navigazione. */
+.nav-underline {
+  position: relative;
+}
+
+.nav-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -0.4em;
+  height: 1px;
+  width: 0;
+  background-color: currentColor;
+  transition: width 0.3s var(--ease-soft);
+}
+
+.nav-underline:hover::after {
+  width: 100%;
+}
+
+/* ==========================================================================
+   ACCESSIBILITA'
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .gsap-hidden {
+    opacity: 1;
+  }
+
+  .text-reveal .word {
+    color: var(--color-secondary);
+  }
+}
+
+/* --- Piatti in carosello (home) ---------------------------------------- */
+/*
+ * I piatti stanno inclinati di 10 gradi e **quello al centro si raddrizza**.
+ * E' tutta qui l'animazione: nessun JS, nessun GSAP, solo la classe
+ * `swiper-slide-active` che Swiper mette sulla slide attiva. Con
+ * l'avanzamento automatico ogni due secondi, l'effetto e' un piatto che si
+ * mette dritto mentre gli altri restano di sbieco.
+ *
+ * La transizione dura 0.8s contro il secondo che impiega la slide a scorrere:
+ * il raddrizzamento finisce appena prima che il piatto sia arrivato, e non
+ * sembra che le due cose siano incollate.
+ */
+.piatto-in-slitta {
+  transform: rotate(10deg);
+  transition: transform 0.8s var(--ease-soft);
+}
+
+.swiper-slide-active .piatto-in-slitta {
+  transform: rotate(0deg);
+}
+
+/* --- La voce a cui corrisponde la foto in cima --------------------------- */
+/*
+ * Sotto `xl` la fascia in cima mostra il piatto della voce al centro dello
+ * schermo, e `FasciaPiatti` marca quella voce con `data-attivo`. Qui il titolo
+ * marcato resta pieno e gli altri si attenuano appena: quel tanto che basta a
+ * legare la fotografia alla riga giusta, senza spegnere il resto del menu.
+ *
+ * Solo sotto `xl`: piu' in su la fascia non c'e' (`xl:hidden`), ma il suo
+ * ascoltatore continua a girare e marcherebbe le voci lo stesso.
+ */
+@media (width < 80rem) {
+  .voce-piatto {
+    opacity: 0.25;
+    transition: opacity 0.4s var(--ease-soft);
+  }
+
+  [data-attivo] .voce-piatto {
+    opacity: 1;
+  }
+}
+
+/*
+ * Il marmo dentro la fascia dei piatti.
+ *
+ * Non e' un colore che somiglia al fondo: e' **lo stesso marmo, nella stessa
+ * posizione**. Il livello e' `fixed` con le stesse misure di
+ * `.marble-backdrop`, quindi copre lo schermo esattamente come quello dietro
+ * alla pagina e le venature combaciano; poi viene ritagliato sulla banda della
+ * fascia con `clip-path`. Il risultato e' che sotto la fascia il menu sparisce,
+ * ma il marmo prosegue senza un salto.
+ *
+ * Le due misure del ritaglio le aggiorna `FasciaPiatti` a ogni fotogramma,
+ * perche' la fascia si muove finche' non si pianta in alto.
+ *
+ * Perche' non `background-attachment: fixed`, che sarebbe una riga sola: su
+ * iOS non viene rispettato e il marmo tornerebbe ad ancorarsi all'elemento,
+ * disallineandosi proprio sui telefoni, che sono l'unico posto dove la fascia
+ * si vede.
+ */
+.marmo-fascia {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  /* Il colore sta **qui** e non sulla fascia: sulla fascia non verrebbe
+     mascherato e finirebbe di colpo, lasciando la riga netta che la sfumatura
+     doveva togliere. Serve anche da fondo se la texture non arriva. */
+  background-color: var(--color-bg-light);
+  background-image: url('/images/texture-marmo-chiaro.jpg');
+  background-size: cover;
+  background-position: center;
+  /* Quattro tappe, **tutte in pixel calcolati da `FasciaPiatti`**: taglio netto
+     in alto dove la fascia incontra l'intestazione, pieno fino a dove comincia
+     la sfumatura, e via.
+     Le posizioni arrivano gia' in ordine dal JS. Con le tappe scritte in
+     percentuale e sottrazioni, quando la fascia usciva dallo schermo l'ordine
+     si invertiva: il CSS le riallinea alla precedente e il gradiente diventava
+     una rampa da trasparente a opaco lunga tutta la finestra — un velo di marmo
+     su tutta la pagina, che sbiadiva testo e bottoni. */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent var(--fascia-top, 0px),
+    #000 var(--fascia-top, 0px),
+    #000 var(--fascia-sfuma-da, 0px),
+    transparent var(--fascia-fine, 0px)
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent var(--fascia-top, 0px),
+    #000 var(--fascia-top, 0px),
+    #000 var(--fascia-sfuma-da, 0px),
+    transparent var(--fascia-fine, 0px)
+  );
+}
+
+/* Fuori schermo non deve disegnare niente: la maschera da sola non basta a
+   garantirlo in tutti i casi limite, e un velo di marmo sulla pagina non si
+   nota subito ma sbiadisce tutto. */
+.fascia-piatti[data-fuori] .marmo-fascia {
+  display: none;
+}
+
+/* I piatti **non** sfumano: restano pieni fino in fondo. La sfumatura sta tutta
+   nello spazio vuoto sotto di loro (il `pb` della fascia), dove serve solo a far
+   emergere il testo del menu senza un taglio netto. Sfumando anche i piatti si
+   spegneva il bordo inferiore di quello al centro, che il riquadro lo riempie
+   tutto. */
+
+/*
+ * Nella fascia, anche i piatti ai lati si attenuano: in evidenza resta solo
+ * quello al centro, che e' quello di cui si sta leggendo il titolo.
+ *
+ * La regola e' legata alla fascia e non a `.piatto-in-slitta`, che e' anche del
+ * carosello in home — li' i piatti sono tutti alla pari e attenuarne due
+ * sarebbe un effetto che nessuno ha chiesto.
+ */
+.fascia-piatti .piatto-in-slitta {
+  opacity: 0.25;
+  transition:
+    transform 0.8s var(--ease-soft),
+    opacity 0.4s var(--ease-soft);
+}
+
+.fascia-piatti .swiper-slide-active .piatto-in-slitta {
+  opacity: 1;
+  /* Quasi la meta' piu' grande degli altri, oltre che dritto e a fuoco: e' il
+     piatto della voce che si sta leggendo, e si vede da lontano quale sia.
+     Lo spazio per crescere lo da' il margine sull'immagine in `FasciaPiatti` —
+     senza, la slitta lo taglierebbe sopra e sotto. Se si cambia questo numero
+     va rifatto anche quel margine: serve `1 - 1/scala` di altezza libera. */
+  transform: rotate(0deg) scale(1.44);
+}
+
+/* Il marchio: due maschere, non due immagini.
+
+   Il disegno e' nero su crema. Riempiendo la maschera con `currentColor` il
+   marchio prende il colore del testo che ha attorno: bianco sopra al video
+   della home, nero caldo quando la testata diventa chiara. Un file solo per
+   tutti e due gli stati, e la dissolvenza del colore e' gia' quella della
+   testata.
+
+   `aspect-ratio` invece della larghezza: si detta l'altezza e la larghezza
+   viene da se', a qualunque misura, senza schiacciare il disegno. I rapporti
+   sono quelli dei due ritagli.
+
+   Il prefisso `-webkit-` serve ancora a Safari sotto la 15.4. */
+.marchio-ritratto,
+.marchio-firma {
+  background-color: currentColor;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+.marchio-ritratto {
+  aspect-ratio: 306 / 441;
+  -webkit-mask-image: url('/logo-ritratto.png');
+  mask-image: url('/logo-ritratto.png');
+}
+
+.marchio-firma {
+  aspect-ratio: 639 / 169;
+  -webkit-mask-image: url('/logo-firma.png');
+  mask-image: url('/logo-firma.png');
+}
