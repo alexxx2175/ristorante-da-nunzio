@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import Button from '@/components/ui/Button'
 import FooterVine from '@/components/layout/FooterVine'
-import { addressLine, navItems, reservationCta, siteConfig } from '@/lib/site'
+import TornaSu from '@/components/ui/TornaSu'
+import { addressLine, reservationCta, siteConfig } from '@/lib/site'
 
 const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
   `${siteConfig.name}, ${addressLine}`
@@ -57,25 +58,15 @@ function SocialIcon({ name }: { name: string }) {
 export default function Footer() {
   return (
     <footer>
-      {/* ---- blocco chiaro: navigazione ---------------------------------- */}
-      {/* Senza marchio: quello grande sta appena sopra, in fondo alla pagina, e
-          due marchi a mezzo centimetro l'uno dall'altro erano uno di troppo. */}
+      {/* ---- blocco chiaro: torna in cima --------------------------------
+          Qui c'era una seconda barra di navigazione con le stesse quattro voci
+          della testata. Ripeterle a un dito dal piede non aggiungeva niente:
+          la testata e' fissa e non se ne va mai. Al suo posto una freccia che
+          risale la pagina **restando dove sei**, e da lassu' il menu c'e'
+          gia'. */}
       <div className="text-secondary border-secondary/10 border-t">
         <div className="container-gutter flex justify-center py-8">
-          <nav aria-label="Navigazione footer">
-            <ul className="flex flex-wrap items-center justify-center gap-x-7 gap-y-3">
-              {navItems.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="font-sans text-[0.6875rem] font-medium tracking-[0.14em] uppercase transition-opacity duration-300 ease-out hover:opacity-60"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
+          <TornaSu />
         </div>
       </div>
 
