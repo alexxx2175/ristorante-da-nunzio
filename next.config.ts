@@ -1,6 +1,13 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  /* Via la pastiglia «N» in basso a sinistra durante lo sviluppo.
+     Nel sito pubblicato non c'e' mai — l'overlay di sviluppo non viene
+     compilato in produzione — ma dava fastidio mentre si lavora e negli
+     screenshot. Gli errori di compilazione continuano a comparire lo stesso:
+     questo toglie solo l'indicatore, non le diagnostiche. */
+  devIndicators: false,
+
   experimental: {
     /* Il pannello manda le fotografie attraverso una Server Action, e il corpo
        predefinito e' 1 MB: bastava uno scatto del telefono per superarlo. Il
