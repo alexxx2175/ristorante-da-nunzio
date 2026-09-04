@@ -163,7 +163,16 @@ export default function MenuScaffold({
                 ) : null}
 
                 <StaggerGroup>
-                  <ul className="mt-6 flex flex-col gap-6">
+                  {/* **Niente `gap`: lo spazio fra i piatti e' padding delle
+                      righe stesse.** Con un `gap` i 24px fra una voce e l'altra
+                      non appartengono a nessuno, e con il cursore li' dentro non
+                      si vedeva nessuna fotografia — scorrendo, la foto spariva e
+                      tornava a ogni riga. Cosi' invece ogni pixel della colonna
+                      sta dentro una voce: dodici pixel sopra e dodici sotto per
+                      ciascuna, che affiancate fanno gli stessi 24 di prima.
+                      `first:pt-0` e `last:pb-0` lasciano i bordi dell'elenco
+                      dov'erano. */}
+                  <ul className="mt-6 flex flex-col">
                   {/* La chiave include l'indice: fra le bevande lo stesso nome
                       torna con formati diversi ("Peroni" 20 cl e 40 cl), e il
                       solo nome non e' univoco. */}
@@ -171,7 +180,7 @@ export default function MenuScaffold({
                     <li
                       key={`${item.name}-${index}`}
                       data-stagger-item
-                      className="gsap-hidden relative"
+                      className="group/piatto gsap-hidden relative py-3 first:pt-0 last:pb-0"
                       /* L'indice serve a `FasciaPiatti` per sapere quale piatto
                          mostrare in cima: e' la posizione fra le voci
                          fotografate, nell'ordine del menu. */
@@ -194,11 +203,11 @@ export default function MenuScaffold({
                       <div>
                         {/* Il cerchio con la foto del piatto.
 
-                            Sta **dentro** l'h3 perche' il passaggio del cursore
-                            deve valere sul nome, non su tutta la riga; ma e'
-                            `absolute` e l'antenato posizionato e' il <li>, non
-                            l'h3, quindi si ancora al <li> e non alla fine del
-                            testo — che e' lungo diverso per ogni piatto.
+                            Sta dentro l'h3 ma e' `absolute`, e l'antenato
+                            posizionato e' il <li>, non l'h3: si ancora al <li>
+                            e non alla fine del testo, che e' lungo diverso per
+                            ogni piatto. Chi la fa comparire e' il `group/piatto`
+                            del <li>, cosi' vale tutta la riga.
 
                             `left: calc(25vw + 75%)` lo mette al centro della
                             fascia bianca a destra: il <li> e' centrato nella

@@ -14,6 +14,13 @@ type NomePiattoProps = {
  * esiste — a 1024px sarebbe largo 112px — e ci pensa `FasciaPiatti`, la
  * striscia in cima che segue lo scorrimento.
  *
+ * **Il passaggio del cursore si ascolta sulla riga, non qui**: il gruppo
+ * `group/piatto` sta sul `<li>` in `MenuScaffold`, e questa fotografia gli
+ * risponde. Quando stava sul titolo l'area sensibile era alta quanto il testo
+ * del nome — due centimetri scarsi — e bastava avere il cursore sugli
+ * ingredienti, sul prezzo o nello spazio fra due piatti perche' non comparisse
+ * niente. Scorrendo la pagina la foto lampeggiava a intermittenza.
+ *
  * Il titolo **non e' un comando**: la fotografia e' decorazione, e il nome del
  * piatto e' gia' scritto li' accanto. Renderlo attivabile aggiungerebbe
  * venticinque tappe da tastiera in cambio di niente. C'e' stata una versione in
@@ -22,7 +29,7 @@ type NomePiattoProps = {
  */
 export default function NomePiatto({ nome, photo }: NomePiattoProps) {
   return (
-    <h3 className="group/piatto voce-piatto font-serif text-xl leading-[1.22] md:text-2xl md:leading-snug">
+    <h3 className="voce-piatto font-serif text-xl leading-[1.22] md:text-2xl md:leading-snug">
       {nome}
       {photo ? (
         <span
