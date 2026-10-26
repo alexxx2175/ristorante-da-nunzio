@@ -14,7 +14,10 @@ import { cookies } from 'next/headers'
  * stata dimenticata una variabile e' peggio di una porta che non c'e'.
  */
 
-export const BISCOTTO = 'nunzio_admin'
+/* Il nome e' cambiato il 26/10/2026, e non per estetica: cambiarlo chiude
+   tutti gli accessi aperti col nome vecchio, che duravano un mese. Per buttare
+   fuori tutti un'altra volta basta cambiarlo di nuovo. */
+export const BISCOTTO = 'nunzio_admin_2'
 
 export async function impronta(password: string): Promise<string> {
   const dati = new TextEncoder().encode(`nunzio:${password}`)

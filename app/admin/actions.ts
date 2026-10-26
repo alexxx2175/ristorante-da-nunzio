@@ -18,8 +18,14 @@ import type { Portata } from '@/lib/piatti'
 import { traduciPiatto } from '@/lib/traduci'
 import type { Esito } from './esito'
 
-/** Un mese: chi gestisce il menu non deve rifare l'accesso ogni giorno. */
-const DURATA = 60 * 60 * 24 * 30
+/**
+ * Due ore, poi la password si richiede.
+ *
+ * Era un mese, ed era troppo: il pannello si apriva senza chiedere niente a
+ * chiunque prendesse in mano un telefono o un computer da cui si era entrati
+ * una volta. Due ore bastano per sistemare il menu in una sessione sola.
+ */
+const DURATA = 60 * 60 * 2
 
 export async function entra(_precedente: Esito, dati: FormData): Promise<Esito> {
   const attesa = process.env.ADMIN_PASSWORD
