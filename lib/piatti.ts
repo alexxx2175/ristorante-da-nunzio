@@ -25,6 +25,85 @@ export const portataDiSezione = (sezione: string) => PORTATE.find((p) => p.sezio
 
 export type Portata = (typeof PORTATE)[number]['chiave']
 
+/**
+ * I quattordici allergeni del Reg. UE 1169/2011, nell'ordine dell'allegato II.
+ *
+ * **Il numero e' la posizione nell'elenco**, ed e' quello che il menu stampa
+ * sotto al piatto: «1 · 4 · 7» si legge allo stesso modo a un tavolo tedesco e
+ * a uno inglese, e la legenda in fondo alla pagina lo spiega nelle tre lingue.
+ * Non riordinarlo: i numeri cambierebbero sotto ai piatti.
+ *
+ * Quelli aggiunti dal pannello non stanno qui ma nel deposito: vedi
+ * `catalogoAllergeni`.
+ */
+const ALLERGENI_UE = [
+  { chiave: 'glutine', it: 'Cereali contenenti glutine', de: 'Glutenhaltiges Getreide', en: 'Cereals containing gluten' },
+  { chiave: 'crostacei', it: 'Crostacei', de: 'Krebstiere', en: 'Crustaceans' },
+  { chiave: 'uova', it: 'Uova', de: 'Eier', en: 'Eggs' },
+  { chiave: 'pesce', it: 'Pesce', de: 'Fisch', en: 'Fish' },
+  { chiave: 'arachidi', it: 'Arachidi', de: 'Erdnüsse', en: 'Peanuts' },
+  { chiave: 'soia', it: 'Soia', de: 'Soja', en: 'Soybeans' },
+  { chiave: 'latte', it: 'Latte', de: 'Milch', en: 'Milk' },
+  { chiave: 'frutta-a-guscio', it: 'Frutta a guscio', de: 'Schalenfrüchte', en: 'Nuts' },
+  { chiave: 'sedano', it: 'Sedano', de: 'Sellerie', en: 'Celery' },
+  { chiave: 'senape', it: 'Senape', de: 'Senf', en: 'Mustard' },
+  { chiave: 'sesamo', it: 'Semi di sesamo', de: 'Sesamsamen', en: 'Sesame seeds' },
+  { chiave: 'solfiti', it: 'Anidride solforosa e solfiti', de: 'Schwefeldioxid und Sulfite', en: 'Sulphur dioxide and sulphites' },
+  { chiave: 'lupini', it: 'Lupini', de: 'Lupinen', en: 'Lupin' },
+  { chiave: 'molluschi', it: 'Molluschi', de: 'Weichtiere', en: 'Molluscs' },
+] as const
+
+/**
+ * La chiave di un allergene: una parola per i quattordici del regolamento,
+ * un identificatore per quelli aggiunti dal pannello. Una stringa e non un
+ * elenco chiuso, perche' l'elenco lo allunga il locale.
+ */
+export type Allergene = string
+
+/**
+ * Una voce dell'elenco degli allergeni, con il numero che il menu stampa.
+ *
+ * Tedesco e inglese mancano in quelli aggiunti dal pannello: li' si scrive un
+ * nome solo, e la legenda mostra quello.
+ */
+export type VoceAllergene = { chiave: Allergene; numero: number; it: string; de?: string; en?: string }
+
+/** Un allergene aggiunto dal pannello, come lo salva il deposito. */
+export type AllergenePersonale = { chiave: Allergene; numero: number; nome: string }
+
+/** I quattordici del regolamento, numerati dalla loro posizione. */
+export const ALLERGENI: VoceAllergene[] = ALLERGENI_UE.map((a, i) => ({ ...a, numero: i + 1 }))
+
+/**
+ * Tutti gli allergeni che si possono scegliere: i quattordici del regolamento
+ * piu' quelli aggiunti dal pannello, in ordine di numero.
+ *
+ * E' **l'elenco** che si passa a chi stampa i numeri e a chi mostra le caselle:
+ * un piatto conosce i suoi allergeni per chiave, e il numero lo trova qui.
+ */
+export const catalogoAllergeni = (personali: readonly AllergenePersonale[] = []): VoceAllergene[] =>
+  [...ALLERGENI, ...personali.map((a) => ({ chiave: a.chiave, numero: a.numero, it: a.nome }))].sort(
+    (a, b) => a.numero - b.numero
+  )
+
+/**
+ * Le voci di un piatto, nell'ordine dell'elenco e senza doppi.
+ *
+ * Una chiave che l'elenco non conosce piu' resta fuori: un numero senza
+ * legenda sotto a un piatto non dice niente a nessuno.
+ */
+export const vociAllergeni = (chiavi: readonly Allergene[] | undefined, catalogo: readonly VoceAllergene[]) =>
+  chiavi?.length ? catalogo.filter((a) => chiavi.includes(a.chiave)) : []
+
+/**
+ * Tiene solo gli allergeni che esistono, nell'ordine dell'elenco e senza doppi.
+ *
+ * Arrivano da un modulo — che si puo' riscrivere prima di mandarlo — e il menu
+ * li stampa in fila: «7 · 1 · 7» sembrerebbe un errore anche quando non lo e'.
+ */
+export const pulisciAllergeni = (grezzi: readonly string[], catalogo: readonly VoceAllergene[]): Allergene[] =>
+  vociAllergeni(grezzi, catalogo).map((a) => a.chiave)
+
 export type PiattoAggiunto = {
   id: string
   portata: Portata
@@ -41,6 +120,8 @@ export type PiattoAggiunto = {
    */
   de?: string
   en?: string
+  /** Gli allergeni del piatto. Manca nei piatti salvati prima che esistesse. */
+  allergeni?: Allergene[]
   /** Indirizzo della fotografia. Vuoto se non ne e' stata caricata una. */
   foto?: string
   creato: string
@@ -53,6 +134,8 @@ export type Modifica = {
   prezzo?: string
   de?: string
   en?: string
+  /** Un elenco vuoto vuol dire "nessun allergene", non "come prima". */
+  allergeni?: Allergene[]
   foto?: string
   /**
    * La sezione in cui il piatto e' stato spostato, se e' stato spostato.
@@ -125,4 +208,6 @@ export type Deposito = {
   modifiche: Record<string, Modifica>
   /** L'ordine dei piatti dentro ogni sezione, per chiave. */
   ordine: Record<string, string[]>
+  /** Gli allergeni aggiunti dal pannello, oltre ai quattordici del regolamento. */
+  allergeni: AllergenePersonale[]
 }

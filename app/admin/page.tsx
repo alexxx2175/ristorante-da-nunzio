@@ -6,6 +6,7 @@ import { autenticato, passwordConfigurata } from '@/lib/admin-auth'
 import { leggiDeposito } from '@/lib/piatti-store'
 import { traduzioneConfigurata } from '@/lib/traduci'
 import { componiMenu } from '@/lib/menu-composto'
+import { catalogoAllergeni } from '@/lib/piatti'
 import { esci } from './actions'
 
 export const metadata = {
@@ -37,7 +38,9 @@ export const dynamic = 'force-dynamic'
 export default async function AdminPage() {
   const configurato = passwordConfigurata()
   const dentro = configurato && (await autenticato())
-  const sezioni = dentro ? componiMenu(await leggiDeposito()) : []
+  const deposito = dentro ? await leggiDeposito() : null
+  const sezioni = deposito ? componiMenu(deposito) : []
+  const allergeni = catalogoAllergeni(deposito?.allergeni)
   const traduce = traduzioneConfigurata()
 
   return (
@@ -60,7 +63,7 @@ export default async function AdminPage() {
         ) : (
           <>
             <div className="mt-10">
-              <ModuloPiatto traduzioneAttiva={traduce} />
+              <ModuloPiatto traduzioneAttiva={traduce} allergeni={allergeni} />
             </div>
 
             <div className="border-secondary/15 mt-16 border-t pt-10">
@@ -74,8 +77,8 @@ export default async function AdminPage() {
                   riaccende quando torna in carta.
                 </li>
                 <li>
-                  <span aria-hidden>✎</span> La matita cambia nome, ingredienti, prezzo, traduzioni
-                  e fotografia — e sposta il piatto fra antipasti, primi, secondi e contorni.
+                  <span aria-hidden>✎</span> La matita cambia nome, ingredienti, prezzo, allergeni,
+                  traduzioni e fotografia — e sposta il piatto fra antipasti, primi, secondi e contorni.
                 </li>
                 <li>
                   <span aria-hidden>🗑</span> Il cestino lo toglie per sempre, dopo una conferma.
@@ -88,6 +91,7 @@ export default async function AdminPage() {
                     key={sezione.title}
                     sezione={sezione.title}
                     traduzioneAttiva={traduce}
+                    allergeni={allergeni}
                     righe={sezione.voci.map(
                       (v): Riga => ({
                         chiave: v.chiave,
@@ -96,6 +100,7 @@ export default async function AdminPage() {
                         prezzo: v.voce.price ?? '',
                         de: v.voce.de ?? '',
                         en: v.voce.en ?? '',
+                        allergeni: v.voce.allergens ?? [],
                         sezione: sezione.title,
                         ...(v.voce.photo ? { foto: v.voce.photo.src } : {}),
                         aggiunto: v.aggiunto,

@@ -2,13 +2,20 @@ import 'server-only'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { del, list, put } from '@vercel/blob'
-import type { Deposito, Modifica, PiattoAggiunto } from '@/lib/piatti'
+import type { Allergene, Deposito, Modifica, PiattoAggiunto } from '@/lib/piatti'
 
 export type { Deposito, PiattoAggiunto, Portata, Modifica } from '@/lib/piatti'
 export { PORTATE, chiavePiatto, formattaPrezzo } from '@/lib/piatti'
-import { portataDiSezione } from '@/lib/piatti'
+import { catalogoAllergeni, portataDiSezione } from '@/lib/piatti'
 
-const VUOTO: Deposito = { aggiunti: [], nascosti: [], cancellati: [], modifiche: {}, ordine: {} }
+const VUOTO: Deposito = {
+  aggiunti: [],
+  nascosti: [],
+  cancellati: [],
+  modifiche: {},
+  ordine: {},
+  allergeni: [],
+}
 
 /**
  * Accetta anche i formati vecchi: prima era un elenco, poi un oggetto con due
@@ -25,6 +32,7 @@ function normalizza(dati: unknown): Deposito {
       cancellati: d.cancellati ?? [],
       modifiche: d.modifiche ?? {},
       ordine: d.ordine ?? {},
+      allergeni: d.allergeni ?? [],
     }
   }
   return VUOTO
@@ -188,6 +196,7 @@ export async function modificaPiatto(chiave: string, cambi: Modifica) {
                 prezzo: cambi.prezzo ?? p.prezzo,
                 de: cambi.de ?? p.de,
                 en: cambi.en ?? p.en,
+                allergeni: cambi.allergeni ?? p.allergeni,
                 foto: cambi.foto ?? p.foto,
               }
             : p
@@ -228,6 +237,7 @@ export async function cancellaPiatto(chiave: string) {
     delete modifiche[chiave]
 
     return {
+      ...deposito,
       aggiunti: deposito.aggiunti.filter((p) => p.id !== chiave),
       nascosti: deposito.nascosti.filter((c) => c !== chiave),
       cancellati: aggiunto ? deposito.cancellati : [...deposito.cancellati, chiave],
@@ -245,4 +255,24 @@ export async function riordinaSezione(sezione: string, chiavi: string[]) {
     ...deposito,
     ordine: { ...deposito.ordine, [sezione]: chiavi },
   }))
+}
+
+/**
+ * Aggiunge un allergene all'elenco, da proporre d'ora in poi a ogni piatto.
+ *
+ * Il numero e il nome si ricontrollano **qui dentro**, in fila con le altre
+ * scritture: due aggiunte di fila con lo stesso numero passerebbero entrambe il
+ * controllo fatto prima, e la seconda deve invece fermarsi.
+ */
+export async function aggiungiAllergene(numero: number, nome: string): Promise<Allergene | null> {
+  let chiave: Allergene | null = null
+  await aggiorna((deposito) => {
+    const occupato = catalogoAllergeni(deposito.allergeni).some(
+      (a) => a.numero === numero || a.it.toLowerCase() === nome.toLowerCase()
+    )
+    if (occupato) return deposito
+    chiave = `extra-${Date.now().toString(36)}`
+    return { ...deposito, allergeni: [...deposito.allergeni, { chiave, numero, nome }] }
+  })
+  return chiave
 }

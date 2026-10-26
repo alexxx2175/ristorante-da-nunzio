@@ -74,6 +74,7 @@ export function componiMenu(deposito: Deposito): SezioneComposta[] {
         ...(p.prezzo ? { price: p.prezzo } : {}),
         ...(p.de ? { de: p.de } : {}),
         ...(p.en ? { en: p.en } : {}),
+        ...(p.allergeni?.length ? { allergens: p.allergeni } : {}),
         ...(p.foto ? { photo: { src: p.foto, alt: p.nome } } : {}),
       },
     })
@@ -114,6 +115,7 @@ function applica(voce: MenuItem, cambi: Modifica): MenuItem {
   const prezzo = cambi.prezzo ?? voce.price
   const de = cambi.de ?? voce.de
   const en = cambi.en ?? voce.en
+  const allergeni = cambi.allergeni ?? voce.allergens
   const foto = cambi.foto ? { src: cambi.foto, alt: cambi.nome ?? voce.name } : voce.photo
   return {
     ...voce,
@@ -122,6 +124,7 @@ function applica(voce: MenuItem, cambi: Modifica): MenuItem {
     ...(prezzo ? { price: prezzo } : { price: undefined }),
     ...(de ? { de } : { de: undefined }),
     ...(en ? { en } : { en: undefined }),
+    ...(allergeni?.length ? { allergens: allergeni } : { allergens: undefined }),
     ...(foto ? { photo: foto } : {}),
   }
 }

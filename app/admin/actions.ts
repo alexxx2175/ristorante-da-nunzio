@@ -4,14 +4,16 @@ import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { BISCOTTO, esigiAccesso, impronta } from '@/lib/admin-auth'
 import {
+  aggiungiAllergene,
   aggiungiPiatto,
   cancellaPiatto,
   commutaNascosto,
   modificaPiatto,
+  leggiDeposito,
   riordinaSezione,
   salvaFoto,
 } from '@/lib/piatti-store'
-import { PORTATE, formattaPrezzo } from '@/lib/piatti'
+import { PORTATE, catalogoAllergeni, formattaPrezzo, pulisciAllergeni } from '@/lib/piatti'
 import type { Portata } from '@/lib/piatti'
 import { traduciPiatto } from '@/lib/traduci'
 import type { Esito } from './esito'
@@ -79,7 +81,9 @@ export async function salvaPiatto(_precedente: Esito, dati: FormData): Promise<E
     if (proposta) ({ de, en } = proposta)
   }
 
-  await aggiungiPiatto({ portata, nome, ingredienti, prezzo, de, en, foto })
+  const allergeni = await allergeniDalModulo(dati)
+
+  await aggiungiPiatto({ portata, nome, ingredienti, prezzo, de, en, allergeni, foto })
 
   // Il menu e' una pagina pregenerata: senza questo continuerebbe a mostrare
   // quella di prima finche' non si ripubblica il sito.
@@ -88,6 +92,12 @@ export async function salvaPiatto(_precedente: Esito, dati: FormData): Promise<E
   return {
     fatto: `“${nome}” aggiunto al menu.${de || en ? ' Tedesco e inglese proposti dalla traduzione automatica: rileggili dalla matita.' : ''}`,
   }
+}
+
+/** Le caselle spuntate, tenendo solo gli allergeni che l'elenco conosce. */
+async function allergeniDalModulo(dati: FormData) {
+  const { allergeni } = await leggiDeposito()
+  return pulisciAllergeni(dati.getAll('allergeni').map(String), catalogoAllergeni(allergeni))
 }
 
 /** Toglie un piatto per sempre. Il pannello chiede conferma prima di chiamarla. */
@@ -103,7 +113,7 @@ export async function rimuoviPiatto(_precedente: Esito, dati: FormData): Promise
 
 /**
  * Cambia un piatto gia' in carta, senza rifarlo da capo: il nome, gli
- * ingredienti, il prezzo, la fotografia e la sezione in cui sta.
+ * ingredienti, il prezzo, gli allergeni, la fotografia e la sezione in cui sta.
  */
 export async function cambiaPiatto(_precedente: Esito, dati: FormData): Promise<Esito> {
   await esigiAccesso()
@@ -133,6 +143,9 @@ export async function cambiaPiatto(_precedente: Esito, dati: FormData): Promise<
     prezzo: formattaPrezzo(String(dati.get('prezzo') ?? '')),
     de: String(dati.get('de') ?? '').trim(),
     en: String(dati.get('en') ?? '').trim(),
+    // Sempre, anche vuoto: le caselle arrivano gia' spuntate come sono adesso,
+    // e toglierle tutte e' il modo di dire che il piatto non ne ha.
+    allergeni: await allergeniDalModulo(dati),
     ...(spostato ? { sezione: spostato.sezione } : {}),
     ...(foto ? { foto } : {}),
   })
@@ -179,4 +192,36 @@ export async function proponiTraduzione(
 
   const proposta = await traduciPiatto(nome, ingredienti)
   return proposta ?? { errore: 'La traduzione non è arrivata. Riprova, o scrivila a mano.' }
+}
+
+/**
+ * Aggiunge un allergene all'elenco, con il suo numero e il suo nome.
+ *
+ * Non salva nessun piatto: lo si chiama da dentro il modulo del piatto, che
+ * resta compilato com'era, e il nuovo allergene compare fra le caselle gia'
+ * spuntato. Da li' in avanti viene proposto a ogni piatto.
+ */
+export async function nuovoAllergene(
+  numeroGrezzo: string,
+  nomeGrezzo: string
+): Promise<{ chiave: string } | { errore: string }> {
+  await esigiAccesso()
+  const numero = Number(numeroGrezzo.trim())
+  const nome = nomeGrezzo.trim()
+  if (!Number.isInteger(numero) || numero < 1 || numero > 99)
+    return { errore: 'Il numero dev’essere un numero intero, da 1 a 99.' }
+  if (!nome) return { errore: 'Manca il nome dell’allergene.' }
+
+  const catalogo = catalogoAllergeni((await leggiDeposito()).allergeni)
+  const stessoNumero = catalogo.find((a) => a.numero === numero)
+  if (stessoNumero) return { errore: `Il numero ${numero} è già di «${stessoNumero.it}».` }
+  if (catalogo.some((a) => a.it.toLowerCase() === nome.toLowerCase()))
+    return { errore: `«${nome}» c’è già nell’elenco.` }
+
+  const chiave = await aggiungiAllergene(numero, nome)
+  if (!chiave) return { errore: 'Numero o nome già presi: ricarica la pagina e riprova.' }
+
+  revalidatePath('/menu-ristorante')
+  revalidatePath('/admin')
+  return { chiave }
 }

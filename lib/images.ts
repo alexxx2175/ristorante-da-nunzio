@@ -220,10 +220,9 @@ export const galleryGroups: Photo[][] = [
     piattoFoto('piatto-tartare.jpg', 'Tartare di manzo con julienne di verdure e salse a parte'),
     piattoFoto('piatto-tagliata.jpg', 'Tagliata di manzo con cialde di grana e salsa verde'),
   ],
-  [
-    photo('vicolo-tavoli.jpg', 'I tavoli apparecchiati lungo il vicolo'),
-    photo('vicolo-lanterne.jpg', 'Il vicolo illuminato dalle lanterne, la sera'),
-  ],
+  /* Una foto sola, quindi ferma: c'era anche il vicolo con le lanterne, tolto
+     dal locale il 26/10/2026. */
+  [photo('vicolo-tavoli.jpg', 'I tavoli apparecchiati lungo il vicolo')],
   [
     photo('parete-vini.jpg', 'La parete con le bottiglie di vino'),
     photo('sala-vini-arco.jpg', "L'angolo delle bottiglie sotto l'arco"),

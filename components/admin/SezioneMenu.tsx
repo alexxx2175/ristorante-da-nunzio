@@ -5,6 +5,8 @@ import { useActionState, useRef, useState, useTransition } from 'react'
 import ModuloModifica from '@/components/admin/ModuloModifica'
 import { commutaVisibilita, rimuoviPiatto, salvaOrdine } from '@/app/admin/actions'
 import { nessunEsito } from '@/app/admin/esito'
+import { vociAllergeni } from '@/lib/piatti'
+import type { Allergene, VoceAllergene } from '@/lib/piatti'
 
 export type Riga = {
   chiave: string
@@ -13,6 +15,7 @@ export type Riga = {
   prezzo: string
   de: string
   en: string
+  allergeni: Allergene[]
   foto?: string
   /** La sezione in cui sta adesso, per il modulo che lo puo' spostare. */
   sezione: string
@@ -40,9 +43,12 @@ export default function SezioneMenu({
   sezione,
   righe,
   traduzioneAttiva,
+  allergeni,
 }: {
   sezione: string
   righe: Riga[]
+  /** L'elenco degli allergeni, per i numeri e per il modulo di modifica. */
+  allergeni: VoceAllergene[]
   /** Se il pannello puo' proporre le traduzioni, cioe' se la chiave c'e'. */
   traduzioneAttiva: boolean
 }) {
@@ -105,6 +111,7 @@ export default function SezioneMenu({
         {chiavi.map((chiave) => {
           const riga = perChiave.get(chiave)
           if (!riga) return null
+          const numeri = vociAllergeni(riga.allergeni, allergeni).map((a) => a.numero)
           return (
             <li key={chiave} className={`py-3 ${preso === chiave ? 'bg-secondary/5' : ''}`}>
               <div className="flex items-center gap-2 sm:gap-3">
@@ -129,7 +136,13 @@ export default function SezioneMenu({
                       <span className="text-accent-gold ml-2 align-middle text-xs">aggiunto</span>
                     ) : null}
                   </p>
-                  {riga.prezzo ? <p className="mt-0.5 text-sm opacity-60">{riga.prezzo}</p> : null}
+                  {riga.prezzo || numeri.length ? (
+                    <p className="mt-0.5 text-sm opacity-60">
+                      {riga.prezzo}
+                      {riga.prezzo && numeri.length ? ' · ' : ''}
+                      {numeri.length ? `Allergeni ${numeri.join(', ')}` : ''}
+                    </p>
+                  ) : null}
                 </div>
 
                 <Occhio chiave={chiave} spento={riga.spento} nome={riga.nome} />
@@ -156,6 +169,7 @@ export default function SezioneMenu({
                     riga={riga}
                     chiudi={() => setInModifica(null)}
                     traduzioneAttiva={traduzioneAttiva}
+                    allergeni={allergeni}
                   />
                 </div>
               ) : null}

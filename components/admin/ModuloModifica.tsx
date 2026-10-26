@@ -4,8 +4,10 @@ import { useActionState, useEffect, useRef, useState, useTransition } from 'reac
 import { cambiaPiatto, proponiTraduzione } from '@/app/admin/actions'
 import { nessunEsito } from '@/app/admin/esito'
 import { PORTATE } from '@/lib/piatti'
+import type { VoceAllergene } from '@/lib/piatti'
 import { riduciImmagine } from '@/lib/riduci-immagine'
 import type { Riga } from '@/components/admin/SezioneMenu'
+import SceltaAllergeni from '@/components/admin/SceltaAllergeni'
 
 /**
  * Il modulo per cambiare un piatto gia' in carta.
@@ -31,10 +33,12 @@ export default function ModuloModifica({
   riga,
   chiudi,
   traduzioneAttiva,
+  allergeni,
 }: {
   riga: Riga
   chiudi: () => void
   traduzioneAttiva: boolean
+  allergeni: VoceAllergene[]
 }) {
   const moduloRef = useRef<HTMLFormElement>(null)
   // Questi due sono gli unici campi guidati da React: il bottone ci scrive
@@ -140,6 +144,8 @@ export default function ModuloModifica({
           className="border-secondary/25 focus:border-secondary mt-2 w-full rounded-full border bg-transparent px-5 py-2.5 outline-none"
         />
       </div>
+
+      <SceltaAllergeni catalogo={allergeni} scelti={riga.allergeni} compatto />
 
       <fieldset className="border-secondary/15 rounded-[1.25rem] border px-5 pt-5 pb-5">
         <legend className="nav-link px-2 opacity-60">Come si legge nelle altre lingue</legend>

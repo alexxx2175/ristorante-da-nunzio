@@ -8,6 +8,8 @@ import { reservationCta } from '@/lib/site'
 import { leggiDeposito } from '@/lib/piatti-store'
 import { componiMenu } from '@/lib/menu-composto'
 import type { MenuSection } from '@/components/sections/MenuScaffold'
+import { catalogoAllergeni } from '@/lib/piatti'
+import type { Deposito } from '@/lib/piatti'
 
 export const metadata = pageMetadata({
   title: 'Menù Ristorante',
@@ -28,8 +30,8 @@ export const metadata = pageMetadata({
  * Una sezione rimasta senza piatti non si stampa: un titolo con il vuoto sotto
  * sembra una pagina rotta.
  */
-async function sezioniDaMostrare(): Promise<MenuSection[]> {
-  return componiMenu(await leggiDeposito())
+function sezioniDaMostrare(deposito: Deposito): MenuSection[] {
+  return componiMenu(deposito)
     .map((sezione) => ({
       title: sezione.title,
       ...(sezione.note ? { note: sezione.note } : {}),
@@ -39,7 +41,12 @@ async function sezioniDaMostrare(): Promise<MenuSection[]> {
 }
 
 export default async function MenuRistorantePage() {
-  const sezioni = await sezioniDaMostrare()
+  const deposito = await leggiDeposito()
+  const sezioni = sezioniDaMostrare(deposito)
+  // Un elenco solo per i numeri sotto ai piatti e per la legenda: se si
+  // leggessero ognuno per conto suo, un allergene aggiunto potrebbe comparire
+  // sotto a un piatto e non in fondo, o viceversa.
+  const allergeni = catalogoAllergeni(deposito.allergeni)
 
   return (
     <>
@@ -54,9 +61,9 @@ export default async function MenuRistorantePage() {
 
       {/* In fondo si prenota: mandare al menu, da dentro il menu, sarebbe un
           giro a vuoto. Per la stessa ragione la testata non ha un bottone. */}
-      <MenuScaffold sections={sezioni} cta={reservationCta} />
+      <MenuScaffold sections={sezioni} cta={reservationCta} allergeni={allergeni} />
 
-      <AllergenNotice />
+      <AllergenNotice allergeni={allergeni} />
     </>
   )
 }

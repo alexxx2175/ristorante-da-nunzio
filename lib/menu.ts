@@ -19,6 +19,12 @@ import { dishPhoto } from './images'
  *
  * Prezzi in euro come sul cartaceo. Aggiornandoli qui cambiano ovunque.
  *
+ * **Gli allergeni sono dedotti dal nome e dagli ingredienti**, non presi dal
+ * cartaceo, che non li ha piatto per piatto: pasta vuol dire glutine, burro e
+ * formaggi latte, cozze e seppie molluschi. Quello che non si vede dal nome —
+ * il fondo con il sedano, il vino sfumato, la pasta fatta con l'uovo — va
+ * confermato in cucina. Un piatto senza `allergens` non stampa la riga.
+ *
  * **Le fotografie stanno solo dove il piatto e' riconoscibile con certezza.**
  * Undici voci su venticinque ne hanno una; le altre no, e non e' una svista.
  * Fra le foto disponibili non c'e' niente che le ritragga senza dubbio, e una
@@ -58,12 +64,14 @@ export const foodSections: MenuSection[] = [
         photo: dishPhoto.sardeGelato,
         de: 'Eis aus Malcesine-Olivenöl mit Brot-Crumble und Seesardinen',
         en: 'Malcesine olive oil ice cream with bread crumble and lake sardines',
+        allergens: ['glutine', 'uova', 'pesce', 'latte'],
         price: '€ 18,00',
       },
       {
         name: 'Seppia e piselli',
         photo: dishPhoto.seppiaPiselli,
         de: 'Sepia mit Erbsen',
+        allergens: ['molluschi'],
         price: '€ 16,00',
       },
       {
@@ -71,6 +79,7 @@ export const foodSections: MenuSection[] = [
         photo: dishPhoto.tartare,
         de: 'Rindertatar mit mariniertem Spitzkohl-Salat',
         en: 'Beef tartare with marinated cabbage salad',
+        allergens: ['senape'],
         price: '€ 17,00',
       },
       {
@@ -78,6 +87,7 @@ export const foodSections: MenuSection[] = [
         photo: dishPhoto.porroGranaPere,
         de: 'Lauch, Grana-Käse und osmotisch marinierte Birnen',
         en: 'Leek, Grana cheese and osmosis-marinated pears',
+        allergens: ['latte'],
         price: '€ 14,00',
       },
       {
@@ -85,6 +95,7 @@ export const foodSections: MenuSection[] = [
         photo: dishPhoto.carpaccioMelanzane,
         de: 'Auberginen-Carpaccio mit Sardellen, getrocknetem Tomatenpesto und Baldo-Honig',
         en: 'Eggplant carpaccio with anchovies, sun-dried tomato pesto and Baldo honey',
+        allergens: ['pesce', 'latte', 'frutta-a-guscio'],
         price: '€ 14,00',
       },
       {
@@ -92,6 +103,7 @@ export const foodSections: MenuSection[] = [
         photo: dishPhoto.polpoFagioli,
         de: 'Oktopus mit Schwarzaugenbohnen aus Oliveto Citra',
         en: 'Octopus with black-eyed beans from Oliveto Citra',
+        allergens: ['molluschi'],
         price: '€ 16,00',
       },
       {
@@ -99,6 +111,7 @@ export const foodSections: MenuSection[] = [
         photo: dishPhoto.cremaPaneCozze,
         de: 'Brotcreme mit Miesmuscheln und Schnittlauchöl',
         en: 'Bread cream with mussels and chive oil',
+        allergens: ['glutine', 'molluschi'],
         price: '€ 16,00',
       },
     ],
@@ -111,6 +124,7 @@ export const foodSections: MenuSection[] = [
         photo: dishPhoto.calamarata,
         de: 'Calamarata mit Meeresfrüchten',
         en: 'Calamarata pasta with seafood',
+        allergens: ['glutine', 'crostacei', 'molluschi'],
         price: '€ 22,00',
       },
       {
@@ -118,6 +132,7 @@ export const foodSections: MenuSection[] = [
         photo: dishPhoto.mezzeManiche,
         description: 'Burro al tartufo nero, guanciale e pecorino romano',
         de: 'Mezze Maniche nach Gricia-Art (schwarze Trüffelbutter, Guanciale und Pecorino Romano)',
+        allergens: ['glutine', 'latte'],
         price: '€ 17,00',
       },
       {
@@ -125,6 +140,7 @@ export const foodSections: MenuSection[] = [
         photo: dishPhoto.neroSeppia,
         description: 'Ortica, fondo di seppia, alici e burro',
         de: 'Spaghetti mit Sepiatinte, Brennnessel, Sepiafond und Forellenkaviar',
+        allergens: ['glutine', 'pesce', 'latte', 'molluschi'],
         price: '€ 18,00',
       },
       {
@@ -132,6 +148,7 @@ export const foodSections: MenuSection[] = [
         photo: dishPhoto.linguinePomodori,
         de: 'Linguine mit drei Tomatensorten und Burrata-Stracciatella',
         en: 'Linguine with three varieties of tomato and burrata stracciatella',
+        allergens: ['glutine', 'latte'],
         price: '€ 16,00',
       },
       {
@@ -140,6 +157,7 @@ export const foodSections: MenuSection[] = [
         description: 'Funghi, gamberi, aglio, olio e peperoncino',
         de: 'Tagliatelle mit Pilzen, Garnelen, Knoblauch, Olivenöl und Chili',
         en: 'Tagliatelle with mushrooms, prawns, garlic, olive oil and chili',
+        allergens: ['glutine', 'crostacei', 'uova'],
         price: '€ 18,00',
       },
       {
@@ -147,6 +165,7 @@ export const foodSections: MenuSection[] = [
         photo: dishPhoto.cacioPepe,
         de: 'Spaghettoni mit Käse und schwarzer Pfeffer',
         en: 'Spaghettoni with cheese and black pepper',
+        allergens: ['glutine', 'latte'],
         price: '€ 16,00',
       },
       {
@@ -154,6 +173,7 @@ export const foodSections: MenuSection[] = [
         photo: dishPhoto.pastaPatateCozze,
         de: 'Pasta mit Kartoffeln, geräucherter Provola und Miesmuscheln',
         en: 'Pasta with potatoes, smoked provola cheese and mussels',
+        allergens: ['glutine', 'latte', 'molluschi'],
         price: '€ 18,00',
       },
       {
@@ -162,6 +182,7 @@ export const foodSections: MenuSection[] = [
         description: 'Tastasal sfumato alla soia e koutsouboschi',
         de: 'Fusion-Tagliatelle mit Tastasal, Soave-Wein und Koutsouboschi-Käse',
         en: 'Fusion tagliatelle with Tastasal sausage, Soave wine and Koutsouboschi cheese',
+        allergens: ['glutine', 'uova', 'soia', 'latte'],
         price: '€ 16,00',
       },
     ],
@@ -174,18 +195,21 @@ export const foodSections: MenuSection[] = [
         photo: dishPhoto.merluzzo,
         de: 'Kabeljau mit Endivie, Beurre Blanc und fermentiertem schwarzem Knoblauch',
         en: 'Cod with escarole, beurre blanc and fermented black garlic',
+        allergens: ['pesce', 'latte', 'solfiti'],
         price: '€ 19,00',
       },
       {
         name: 'Calamaro ripieno di risotto alla pescatora',
         photo: dishPhoto.calamaroRipieno,
         en: 'Squid stuffed with seafood risotto',
+        allergens: ['crostacei', 'molluschi'],
         price: '€ 19,00',
       },
       {
         name: 'Pescato del giorno',
         de: 'Fang des Tages',
         en: 'Catch of the day',
+        allergens: ['pesce'],
         price: '€ 16,00 – € 24,00',
       },
       {
@@ -194,6 +218,7 @@ export const foodSections: MenuSection[] = [
         description: 'Gel di rucola, salsa di pomodorini e cialda di grana',
         de: 'Rinder-Tagliata „Iron Flat“ mit Rucola-Gel, Kirschtomaten und Grana-Chip',
         en: '“Iron Flat” beef with rocket gel, cherry tomatoes and Grana crisp',
+        allergens: ['latte'],
         price: '€ 24,00',
       },
       {
@@ -202,6 +227,7 @@ export const foodSections: MenuSection[] = [
         description: 'Wok di verdure e curry verde',
         de: 'Tomahawk Huhn mit Gemüse-Wok und grünem Curry',
         en: 'Tomahawk chicken with wok vegetables and green curry',
+        allergens: ['soia'],
         price: '€ 18,00',
       },
       {
@@ -220,6 +246,7 @@ export const foodSections: MenuSection[] = [
         name: 'Insalata di patate',
         de: 'Kartoffelsalat',
         en: 'Potato salad',
+        allergens: ['uova', 'senape'],
         price: '€ 7,00',
       },
       {

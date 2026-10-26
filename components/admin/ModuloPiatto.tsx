@@ -1,14 +1,17 @@
 'use client'
 
-import { useActionState, useRef } from 'react'
+import { useActionState, useRef, useState } from 'react'
 import { salvaPiatto } from '@/app/admin/actions'
 import { nessunEsito } from '@/app/admin/esito'
 import { PORTATE } from '@/lib/piatti'
+import type { VoceAllergene } from '@/lib/piatti'
 import { riduciImmagine } from '@/lib/riduci-immagine'
+import SceltaAllergeni from '@/components/admin/SceltaAllergeni'
 
 /**
  * Il modulo per aggiungere un piatto: che portata e', il nome, gli ingredienti,
- * il prezzo, come si legge in tedesco e in inglese, la fotografia.
+ * il prezzo, gli allergeni, come si legge in tedesco e in inglese, la
+ * fotografia.
  *
  * A cose fatte il modulo si svuota: senza, si resta davanti ai campi appena
  * compilati e non si capisce se il piatto e' stato salvato o no.
@@ -18,8 +21,19 @@ import { riduciImmagine } from '@/lib/riduci-immagine'
  * facendo un'altra cosa, e la proposta la si rilegge con calma dalla matita —
  * che e' anche l'unico posto dove si vede accanto al resto della carta.
  */
-export default function ModuloPiatto({ traduzioneAttiva }: { traduzioneAttiva: boolean }) {
+export default function ModuloPiatto({
+  traduzioneAttiva,
+  allergeni,
+}: {
+  traduzioneAttiva: boolean
+  allergeni: VoceAllergene[]
+}) {
   const ref = useRef<HTMLFormElement>(null)
+  // Cambia a ogni piatto salvato e fa ripartire da zero le caselle degli
+  // allergeni: `reset()` le riporterebbe a come erano all'inizio, e un
+  // allergene appena aggiunto — che nasce spuntato — resterebbe spuntato anche
+  // per il piatto dopo.
+  const [giro, setGiro] = useState(0)
   const [esito, azione, inCorso] = useActionState(
     async (precedente: typeof nessunEsito, dati: FormData) => {
       // La fotografia si rimpicciolisce **qui**, prima di partire: le Server
@@ -29,7 +43,10 @@ export default function ModuloPiatto({ traduzioneAttiva }: { traduzioneAttiva: b
       if (foto instanceof File && foto.size > 0) dati.set('foto', await riduciImmagine(foto))
 
       const r = await salvaPiatto(precedente, dati)
-      if (r.fatto) ref.current?.reset()
+      if (r.fatto) {
+        ref.current?.reset()
+        setGiro((g) => g + 1)
+      }
       return r
     },
     nessunEsito
@@ -98,6 +115,8 @@ export default function ModuloPiatto({ traduzioneAttiva }: { traduzioneAttiva: b
           «s.q.», «16,00 – 24,00» — scrivilo come vuoi che si legga.
         </p>
       </div>
+
+      <SceltaAllergeni key={giro} catalogo={allergeni} />
 
       <fieldset className="border-secondary/15 rounded-[1.5rem] border p-6">
         <legend className="nav-link px-2 opacity-60">Come si legge nelle altre lingue</legend>

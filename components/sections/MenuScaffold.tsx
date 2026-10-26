@@ -6,6 +6,8 @@ import Reveal from '@/components/ui/Reveal'
 import SplitHeading from '@/components/ui/SplitHeading'
 import StaggerGroup from '@/components/ui/StaggerGroup'
 import type { Photo } from '@/lib/images'
+import { ALLERGENI, vociAllergeni } from '@/lib/piatti'
+import type { Allergene, VoceAllergene } from '@/lib/piatti'
 import { menuCta, siteConfig } from '@/lib/site'
 
 /**
@@ -25,6 +27,8 @@ export type MenuItem = {
   de?: string
   /** Traduzione inglese, dove il menù cartaceo ce l'ha. */
   en?: string
+  /** Allergeni, stampati come numeri: la legenda e' in `AllergenNotice`. */
+  allergens?: Allergene[]
 }
 
 export type MenuSection = {
@@ -50,6 +54,11 @@ type MenuScaffoldProps = {
   sections?: MenuSection[]
   /** Numero di segnaposto mostrati quando `sections` e' vuoto. */
   placeholderSlots?: number
+  /**
+   * L'elenco degli allergeni, per tradurre le chiavi dei piatti in numeri.
+   * Senza, valgono i quattordici del regolamento.
+   */
+  allergeni?: VoceAllergene[]
 }
 
 /**
@@ -61,6 +70,7 @@ type MenuScaffoldProps = {
 export default function MenuScaffold({
   sections = [],
   placeholderSlots = 4,
+  allergeni = ALLERGENI,
   /* Il richiamo in fondo. `null` per non metterlo: sulla pagina del menu
      manderebbe alla pagina che si sta gia' guardando. */
   cta = menuCta,
@@ -281,6 +291,12 @@ export default function MenuScaffold({
                             {item.en}
                           </p>
                         ) : null}
+                        {/* Solo i numeri, senza la parola «Allergeni»:
+                            valgono uguale nelle tre lingue e la legenda in
+                            fondo alla pagina li spiega. Chi passa il cursore
+                            vede i nomi nel suggerimento, e lo screen reader li
+                            legge per esteso al posto delle cifre. */}
+                        <NumeriAllergeni voci={vociAllergeni(item.allergens, allergeni)} />
                       </div>
                       </div>
                     </li>
@@ -301,5 +317,17 @@ export default function MenuScaffold({
         )}
       </div>
     </section>
+  )
+}
+
+/** La riga dei numeri degli allergeni sotto a un piatto. Niente, se non ne ha. */
+function NumeriAllergeni({ voci }: { voci: VoceAllergene[] }) {
+  if (voci.length === 0) return null
+  const nomi = voci.map((a) => a.it).join(', ')
+  return (
+    <p className="mt-1.5 text-[0.6875rem] tracking-wide opacity-50 sm:text-xs" title={nomi}>
+      <span aria-hidden>{voci.map((a) => a.numero).join(' · ')}</span>
+      <span className="sr-only">Allergeni: {nomi}</span>
+    </p>
   )
 }
